@@ -1,0 +1,43 @@
+{
+    "base_config_file": "configs/cbm_drqv2_easy.json",
+    "experiment":{
+        "base_log_dir": "~/data/cbm_drq"
+    },
+    "policy": {
+        "policy": {
+            "class": "DrQPolicy",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu",
+                "trunk_detach": true
+            }
+        }
+    },
+    "agent":{
+        "agent":{
+            "class": "ProtoAgent",
+            "kwargs": {
+                "env": "$expl_env",
+                "policy": "$policy",
+                "qf": "$qf",
+                "qf_target": "$qf_target",
+                "processor": "$proc",
+                "proto_model": "$proto_model",
+                "qf_lr": 5e-4,
+                "policy_lr": 5e-4,
+                "n_aug": 1,
+                "aug": true,
+                "qf_share_trunk": true,
+                "detach_qf_obs":true,
+                "soft_target_tau": 1e-2,
+                "policy_update_freq": 2,
+                "target_update_freq": 2,
+                "init_log_alpha": -2.302, 
+                "next_v_pi_kwargs": {}, 
+                "current_v_pi_kwargs": {}
+            }
+        }
+    }
+}

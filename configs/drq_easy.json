@@ -1,0 +1,156 @@
+{
+    "constant":{
+        "action_repeat": 4,
+        "num_train_loops_per_epoch": 250,
+        "domain": "cheetah",
+        "task": "run"
+    },
+    "experiment":{
+        "tag": "baseline",
+        "use_gpu": true,
+        "seed": null,
+        "base_log_dir": "~/data/drqv1",
+        "log_level": "INFO",
+        "repeat": 3
+    },
+    "algorithm": {
+        "drq": {
+            "class": "OffPolicyRLAlgorithm",
+            "kwargs": {
+                "num_epochs": 500,
+                "max_path_length": 1000,
+                "batch_size": 128,
+                "num_eval_steps":10000,
+                "num_train_loops_per_epoch": "$num_train_loops_per_epoch",
+                "num_expl_steps_per_train_loop": "$action_repeat",
+                "num_trains_per_train_loop": 1,
+                "min_num_steps_before_training": 4000,
+                "eval_freq":10,
+                "record_video_freq": -1,
+                "silent": false
+            }
+        }
+    },
+    "environment": {
+        "expl_env": {
+            "class": "DMControlEnv",
+            "kwargs": {
+                "domain": "$domain", 
+                "task": "$task",
+                "distracting": "easy",
+                "dynamic_distracting": false,
+                "image_size": 84,
+                "action_repeat": "$action_repeat",
+                "record_video": false,
+                "render_via_env": false,
+                "video_prefix": "expl_video"
+            }
+        },
+        "eval_env": {
+            "class": "DMControlEnv",
+            "kwargs": {
+                "domain": "$domain", 
+                "task": "$task",
+                "distracting": "easy",
+                "dynamic_distracting": false,
+                "image_size": 84,
+                "action_repeat": "$action_repeat",
+                "record_video": false,
+                "render_via_env": false,
+                "video_prefix": "background_noise",
+                "dataset_videos": "val"
+            }
+        }
+    },
+    "processor": {
+        "proc": {
+            "class": "CNNEncoder",
+            "kwargs": {
+                "env": "$expl_env",
+                "output_size": null
+            } 
+        }
+    },
+    "policy": {
+        "policy": {
+            "class": "DrQPolicy",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            }
+        }
+    },
+    "value": {
+        "qf": {
+            "class": "DrQQValue",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            } 
+        },
+        "qf_target": {
+            "class": "DrQQValue",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            } 
+        }
+    },
+    "agent":{
+        "agent":{
+            "class": "DrQAgent",
+            "kwargs": {
+                "env": "$expl_env",
+                "policy": "$policy",
+                "qf": "$qf",
+                "qf_target": "$qf_target",
+                "processor": "$proc",
+                "target_processor": null,
+                "policy_lr": 5e-4,
+                "qf_lr": 5e-4,
+                "soft_target_tau": 1e-2,
+                "use_automatic_entropy_tuning": true,
+                "alpha_if_not_automatic": 0,
+                "init_log_alpha": -2.5, 
+                "policy_update_freq": 2,
+                "target_update_freq": 2,
+                "next_v_pi_kwargs": {}, 
+                "current_v_pi_kwargs": {}
+            }
+        }
+    },
+    "pool": {
+        "pool": {
+            "class": "TrajectoryPool",
+            "kwargs": {
+                "env": "$expl_env",
+                "max_size": 5e5 
+            }
+        }
+    },
+    "collector": {
+        "expl_collector": {
+            "class": "simple_collector",
+            "kwargs": {
+                "env": "$expl_env",
+                "agent": "$agent",
+                "pool": "$pool",
+                "action_repeat": "$action_repeat"
+            }
+        },
+        "eval_collector": {
+            "class": "simple_collector",
+            "kwargs": {
+                "env": "$eval_env",
+                "agent": "$agent",
+                "action_repeat": "$action_repeat"
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "base_config_file": "configs/drqv2_easy.json",
+    "constant":{
+        "action_repeat": 4,
+        "num_train_loops_per_epoch": 250,
+        "domain": "cheetah",
+        "task": "run",
+        "noise_schedule":[0,500000,1,0.1]
+    }
+}

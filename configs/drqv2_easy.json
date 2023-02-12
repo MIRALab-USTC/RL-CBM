@@ -1,0 +1,168 @@
+{
+    "constant":{
+        "action_repeat": 8,
+        "num_train_loops_per_epoch": 125,
+        "domain": "cartpole",
+        "task": "swingup",
+        "num_test_steps": 10000,
+        "batch_size":128
+    },
+    "experiment":{
+        "tag": "",
+        "use_gpu": true,
+        "seed": null,
+        "base_log_dir": "~/data/drqv2",
+        "log_level": "INFO",
+        "repeat": 3
+    },
+    "algorithm": {
+        "proto": {
+            "class": "OffPolicyRLAlgorithm",
+            "kwargs": {
+                "num_epochs": 500,
+                "max_path_length": 1000,
+                "batch_size": "$batch_size",
+                "num_eval_steps":10000,
+                "num_train_loops_per_epoch": "$num_train_loops_per_epoch",
+                "num_expl_steps_per_train_loop": "$action_repeat",
+                "num_trains_per_train_loop": 1,
+                "min_num_steps_before_training": 4000,
+                "eval_freq":10,
+                "analyze_freq":40,
+                "record_video_freq": -1,
+                "silent": false
+            }
+        }
+    },
+    "environment": {
+        "expl_env": {
+            "class": "DMControlEnv",
+            "kwargs": {
+                "domain": "$domain", 
+                "task": "$task",
+                "distracting": "easy",
+                "dynamic_distracting": false,
+                "image_size": 84,
+                "action_repeat": "$action_repeat",
+                "record_video": false,
+                "render_via_env": false,
+                "video_prefix": "expl_video"
+            }
+        },
+        "eval_env": {
+            "class": "DMControlEnv",
+            "kwargs": {
+                "domain": "$domain", 
+                "task": "$task",
+                "distracting": "easy",
+                "dynamic_distracting": false,
+                "image_size": 84,
+                "action_repeat": "$action_repeat",
+                "record_video": false,
+                "render_via_env": false,
+                "video_prefix": "eval_video",
+                "dataset_videos": "val"
+            }
+        }
+    },
+    "processor": {
+        "proc": {
+            "class": "CNNEncoder",
+            "kwargs": {
+                "env": "$expl_env",
+                "output_size": null
+
+            } 
+        },
+        "proc_target": {
+            "class": "CNNEncoder",
+            "kwargs": {
+                "env": "$expl_env",
+                "output_size": null
+            } 
+        }
+    },
+    "policy": {
+        "policy": {
+            "class": "DrQv2Policy",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            }
+        }
+    },
+    "value": {
+        "qf": {
+            "class": "DrQQValue",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            } 
+        },
+        "qf_target": {
+            "class": "DrQQValue",
+            "kwargs": {
+                "env": "$expl_env",
+                "processor": "$proc_target",
+                "hidden_layers": [1024,1024],
+                "activation": "relu"
+            } 
+        }
+    },
+    "agent":{
+        "agent":{
+            "class": "DrQv2Agent",
+            "kwargs": {
+                "env": "$expl_env",
+                "policy": "$policy",
+                "qf": "$qf",
+                "qf_target": "$qf_target",
+                "processor": "$proc",
+                "n_step_td": 3,
+                "qf_lr": 5e-4,
+                "policy_lr": 5e-4,
+                "n_aug": 1,
+                "soft_target_tau": 1e-2,
+                "policy_update_freq": 2,
+                "target_update_freq": 2,
+                "next_v_pi_kwargs": {}, 
+                "current_v_pi_kwargs": {},
+                "noise_schedule": [0,500000,1,0.1]
+            }
+        }
+    },
+    "pool": {
+        "pool": {
+            "class": "TrajectoryPool",
+            "kwargs": {
+                "env": "$expl_env",
+                "max_size": 1e6,
+                "return_traj": true,
+                "traj_len": 6
+            }
+        }
+    },
+    "collector": {
+        "expl_collector": {
+            "class": "simple_collector",
+            "kwargs": {
+                "env": "$expl_env",
+                "agent": "$agent",
+                "pool": "$pool",
+                "action_repeat": "$action_repeat"
+            }
+        },
+        "eval_collector": {
+            "class": "simple_collector",
+            "kwargs": {
+                "env": "$eval_env",
+                "agent": "$agent",
+                "action_repeat": "$action_repeat"
+            }
+        }
+    }
+}
