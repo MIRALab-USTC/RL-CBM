@@ -4,7 +4,6 @@
         "num_train_loops_per_epoch": 125,
         "domain": "cartpole",
         "task": "swingup",
-        "num_test_steps": 10000,
         "batch_size":128,
         "noise_schedule":[0,100000,1,0.1]
     },
@@ -23,12 +22,12 @@
                 "num_epochs": 500,
                 "max_path_length": 1000,
                 "batch_size": "$batch_size",
-                "num_eval_steps":5000,
+                "num_eval_steps":10000,
                 "num_train_loops_per_epoch": "$num_train_loops_per_epoch",
                 "num_expl_steps_per_train_loop": "$action_repeat",
                 "num_trains_per_train_loop": 1,
                 "min_num_steps_before_training": 4000,
-                "eval_freq":20,
+                "eval_freq":10,
                 "analyze_freq":40,
                 "record_video_freq": -1,
                 "silent": false
@@ -157,10 +156,11 @@
     },
     "pool": {
         "pool": {
-            "class": "TrajectoryPool",
+            "class": "DomainPool",
             "kwargs": {
                 "env": "$expl_env",
-                "max_size": 1e6,
+                "max_size": 5e5,
+                "ndomain_per_batch": 1,
                 "return_traj": true,
                 "traj_len": 6
             }

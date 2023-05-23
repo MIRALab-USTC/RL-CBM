@@ -128,9 +128,6 @@ class ProtoModelEMA(nn.Module, Processor):
             self.embedding_size, #next_proto
             hidden_layers=self.forward_layers,
             activation=self.activation)
-        self.forward_trunk = nn.Sequential(
-            nn.LayerNorm(self.embedding_size),
-            nn.Tanh())
         self.proto_r = ptu.zeros(self.k,1)
         self.has_r_init = False
         self.tau = tau

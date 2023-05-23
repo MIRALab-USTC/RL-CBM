@@ -16,5 +16,16 @@ For example, test the performance of CBM combined with DrQ-v2 on Cartpole Swingu
 python scripts/run.py configs/cbm_drqv2_easy/cartpole.json
 ```
 
+## Citation
+If you find this code useful, please consider citing the following paper.
+```
+@article{liu2023robust,
+  title={Robust Representation Learning by Clustering with Bisimulation Metrics for Visual Reinforcement Learning with Distractions},
+  author={Liu, Qiyuan and Zhou, Qi and Yang, Rui and Wang, Jie},
+  journal={arXiv preprint arXiv:2302.12003},
+  year={2023}
+}
+```
+
 ## Acknowledgement
 We use the environment wrapper from [Distracting Control Suite](https://github.com/google-research/google-research/tree/master/distracting_control) and [DrQ-v2](https://github.com/facebookresearch/drqv2). Thanks for their contributions.
